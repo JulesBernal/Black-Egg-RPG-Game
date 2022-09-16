@@ -51,7 +51,9 @@ def gameStart():
                         choice=10.5
                         break
                     print("HP Full, Potion not usable.")
-                elif choice.lower()=='ultimate':
+                elif choice.lower()=='ultimate' and thisPlayer["Ultimate"]==False:
+                    print('Ultimate not Ready.')
+                elif choice.lower()=='ultimate' and thisPlayer["Ultimate"]==True:
                     choice=14
                     break
                 print('Not a choice')
@@ -64,17 +66,17 @@ def gameStart():
                         choice=float(choice)*3.5
                         break
                     print("HP Full, Potion not usable.")
-                elif choice=='4' and ultFlag==False:
+                elif choice=='4' and thisPlayer["Ultimate"]==False:
                     print('Ultimate not Ready.')
-                elif choice=='4' and ultFlag==True:
-                    choice=int(choice)*3.5
+                elif choice=='4' and thisPlayer["Ultimate"]==True:
+                    choice=int(int(choice)*3.5)
                     break
                 print('Not a choice')
             else: 
                 print('Not a choice')
         return choice
 
-    monsters=["skeleton","sleepDemon","mothMan"]
+    monsters=["skeleton","sleepDemon","mothMan","capyBara"]
     thisPlayer={
             "Name": "",
             "HP": 20,
@@ -107,7 +109,7 @@ def gameStart():
         "skeleton":("Skeleton",1,1.5,0.8,'swings a giant femur down','raises a boney hand to block'),
         "sleepDemon":("Sleep Paralysis Demon",1,2,0,'attacks you with dreams of taxes','is unable to block'),
         "mothMan":("Moth Man",2,2,2,'swings their claws','shields themselves with their wings'),
-        "dagger":("Chupacabra",2.2,2.2,2.2,'bites','throws a goat to shield themselves.')
+        "capyBara":("Chupacabra",2.5,2.2,2.2,'bites','throws a goat to shield themselves.')
     }
     enemies={ #enemies dictionary
         "skeleton":"",
@@ -162,14 +164,24 @@ def gameStart():
             return
         if rest==False:
             return print(f'You have chosen to not rest.')
-
+    
+    def hpBar(target):
+        symbol='❚'
+        hp=int((target["HP"]/target["Max HP"]) * 8)
+        return hp*symbol
 
     def fight(monster):
         battleStatus = battle(thisPlayer,enemies[monster])
         if battleStatus==False:
-            return [False,choiceFnc('Do you wish to retry? [Y/N]',False,False,True)]
+            return [False,choiceFnc('Do you wish to retry? [Y/N]\n',False,False,True)]
         restAction()
         return [True]
+    def ultCounter(player,flag):
+        if player["Ult Points"]<10:
+            player["Ult Points"]+=1
+            if player["Ult Points"]==10 and flag==0:
+                player["Ultimate"]=True
+                flag=1
 
 
     def battle(player,enemy,egg=False):
@@ -177,11 +189,11 @@ def gameStart():
             tempHP=defender["HP"]
             tempAHP=attacker["HP"]
             print('\n')
-            if defInput<6.5 and atkInput<10.5: #Defender does not block.
+            if defInput<6.5 and atkInput<6.5 or defInput==10.5: #Defender does not block.
                 defender["HP"] -= attacker["Atk"]
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} is hit.")
                 print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
-            elif defInput<=10 and defInput>=6.5 and atkInput<10.5 and defender["Job"]!="Shield": # Defender blocks
+            elif defInput<=10 and defInput>=6.5 and atkInput<10.5: # Defender blocks
                 if (attacker["Atk"] - defender["Block"])<=0:
                     defender["HP"]-=0
                 elif (attacker["Atk"] - defender["Block"])>0:
@@ -189,11 +201,14 @@ def gameStart():
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} {defender['BlockTxt']}.")
                 print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
             
-            elif defInput<=10 and defInput>=6.5 and atkInput<10.5 and defender["Job"]=="Shield": #shield parries
-                attacker["HP"]-=abs(attacker["Atk"] - defender["Block"])
-                print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} {defender['ParryTxt']}.")
+            elif defInput==7.0 and atkInput<=6.5 and defender["Job"]=="shield": #shield parries
+                subVal=(attacker["Atk"] - defender["Block"])
+                if subVal<=0:
+                    subVal=0
+                defender["HP"]-=subVal
+                print(f"{attacker['Name']} {attacker['BlockTxt']}.\n{defender['Name']} {defender['ParryTxt']}.")
                 print(f"{attacker['Name']}'s HP: {tempAHP}\t->\t{attacker['HP']}")
-            elif atkInput==7.0 and attacker["Job"]!='Shield':  #both parties block. 
+            elif atkInput==7.0 and attacker["Job"]!='shield':  #both parties block. 
                 print(f"{attacker['Name']} and {enemy['Name']} both blocked.")
             elif atkInput==10.5: #Potion
                 print(f'Used a potion.')
@@ -204,20 +219,49 @@ def gameStart():
                 attacker["HP"]+= heal
                 attacker["Potions"]-=1
                 print(f" {tempAHP}\t->\t{attacker['HP']}")
-            elif atkInput==14 and attacker['Ultimate']==True: #Ultimate battle
+            elif atkInput==14 and attacker['Ultimate']==True or defInput==14 and defender['Ultimate']==True and defender['Job']=='shield': #Ultimate battle
+                shieldCounter=0
+                if attacker['Job']=='Enemy':
+                    print('test conditional')
+                    if atkInput<6.5:
+                        shieldCounter='attack'
+                    if atkInput>6.5:
+                        shieldCounter='block'
+                if attacker["Job"]=='shield':
+                    return print(f"Preparing parry.")
                 print(f"ULTIMATEEEEEEEEEEE")
-                print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} is hit.")
-                print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
+                if attacker["Job"]!='shield':
+                    if defender["Job"]=="Enemy":
+                        if attacker["Job"]=='book':
+                            print(f"{attacker['Name']} casts forbidden magic and strikes {defender['Name']}")
+                            defender["HP"]-=(9999)
+                        elif attacker["Job"]=='axe':
+                            print(f"{attacker['Name']} goes into a rage against {defender['Name']}")
+                            defender["HP"]-=(attacker["Atk"]*1.5)
+                        elif attacker["Job"]=='thief':
+                            print(f"{attacker['Name']} summons a clone to strike a critical blow on {defender['Name']}")
+                            defender["HP"]-=(attacker["Atk"]*2*6)
+                        print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
+                if defender["Job"]=='shield':
+                    if shieldCounter=='block':
+                        attacker["HP"]-=abs(attacker["Block"] - defender["Block"])
+                        print(f"{attacker['Name']} {attacker['BlockTxt']}.\n{defender['Name']} {defender['ParryTxt']}.")
+                    elif shieldCounter=='attack':
+                        attacker["HP"]-=abs(attacker["Atk"] - defender["Block"])
+                        print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} {defender['ParryTxt']}.")
+                    return print(f"{attacker['Name']}'s HP: {tempAHP}\t->\t{attacker['HP']}")
             elif atkInput==14 and attacker['Ultimate']==False:
-                print("Ultimate not ready yet,")
+                print("Ultimate not ready yet.")
             
             
 
         print('Get ready to survive.')
+        uVal=0
         while not (enemy["HP"]<0 or player["HP"]<0):
-            print(f"\n{enemy['Name']}\t\tHP:{int(enemy['HP'])} / {int(enemy['Max HP'])}")
-            print(f"1.ATTACK[{player['Atk']}]\n2.BLOCK[{int(player['Block'])}]\n3.POTIONS:({int(player['Potions'])})\n4.ULTIMATE({player['Ult Points']}/10)")
-            print(f"{player['Name']}\t\tHP:{int(player['HP'])} / {int(player['Max HP'])}")
+            ##HUD
+            print(f"\n{enemy['Name']}\t\tHP:{cColor('red')}[{hpBar(enemy)}] {int(enemy['HP'])} / {int(enemy['Max HP'])}{cColor('rr')}")
+            print(f"1.ATTACK[{int(player['Atk'])}]\n2.BLOCK[{int(player['Block'])}]\n3.POTIONS:({int(player['Potions'])})\n4.ULTIMATE({player['Ult Points']}/10){cColor('rr')}")
+            print(f"{player['Name']}\t\tHP:{cColor('red')}[{hpBar(player)}] {int(player['HP'])} / {int(player['Max HP'])}{cColor('rr')}")
 
             enemyChoice =   random.randint(1,10)
             if player["Job"]=="shield" and enemyChoice>6:
@@ -225,12 +269,15 @@ def gameStart():
             elif player["Job"]=="shield" and enemyChoice <=6:
                 print(f"{enemy['Name']} is going to attack.")
             attackerChoice=   choiceFnc('Command? [1 or Attack]',True)
-            if attackerChoice!=7.0 and player["Job"]!='shield':
+            
+            # print(attackerChoice)
+            if attackerChoice!=7.0:
                 attack(player,enemy,attackerChoice,enemyChoice)
-                player["Ult Points"]+=1
-            if enemyChoice<=6.5 and enemy["HP"]>0:
+                ultCounter(player,uVal)
+            if enemy["HP"]>0:
                 attack(enemy,player,enemyChoice,attackerChoice)
-                player["Ult Points"]+=1
+                ultCounter(player,uVal)
+                
         player["Ult Points"]=0
         player["Ultimate"]=False
         if player["HP"]<0:
@@ -245,27 +292,31 @@ def gameStart():
         while pChoice!=True:
             pChoice=choiceFnc(flagRepeatQ,False,False,True)
     
-    def consoleColor(code):
+    def cColor(code):
+        if code=='rr':
+            code='0'
+        elif code=='red':
+            code='31;1;4'
+        elif code=='!':
+            code='1;32'
         return f'\033[{code}m'
 
     print('You wake up with a headache in a dimly lit room.')
-    playerInfo('intro',choiceFnc('What is your name?\t'))
-    print(f"Your name is \033[31;1;4m{playerInfo('player')['Name'].upper()}\033[0m")
+    playerInfo('intro',choiceFnc('What is your name? '))
+    # print(f"Your name is \033[31;1;4m{playerInfo('player')['Name'].upper()}\033[0m")
+    print(f"Your name is {cColor('red')}{playerInfo('player')['Name'].upper()}{cColor('rr')}")
 
     print("The table beckons you forth, drawing your attention to it.")
-    loopChoice(True,'Do you go to the table?','You try to pull away from the table. Your hand now rests, pulling you to make a decision.')
+    loopChoice(True,'Do you go to the table? [Y/N]','You try to pull away from the table. Your hand now rests, pulling you to make a decision.')
 
-    print('Before you lay four weapons, each of different schools.')
-    print('First, a shield with a crest of the hare. Second, an axe.\nThird, a mysterious tome. Lastly, a pair of ominous daggers.')
+    print('\n\n\n\nBefore you lay four weapons, each of different schools.')
+    print(f"First, a {cColor('!')}shield{cColor('rr')} with a crest of the hare. Second, an {cColor('!')}axe{cColor('rr')}.\nThird, a mysterious {cColor('!')}tome.{cColor('rr')} Lastly, a pair of ominous {cColor('!')}daggers.{cColor('rr')}")
     print('Pick your weapon. Pick your class.')
     option = (choiceFnc('What do you choose? [Shield, Axe, Book, Dagger]\n'))
 
     playerInfo('start',option)
+    print(f"{thisPlayer['Name']} the {thisPlayer['Job']}\n\n\n\n")
     monsterSet(monsters)
-    
-
-    print(f"{thisPlayer['Name']} the {thisPlayer['Job']}")
-    
     fSeg=fight(monsters[0])
     if fSeg[0]==False:
         return fSeg[1]
