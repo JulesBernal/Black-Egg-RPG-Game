@@ -20,16 +20,18 @@ import random
 def gameStart():
 
 
-    def choiceFnc(question,flag=False,ultFlag=False):
+    def choiceFnc(question,flag=False,ultFlag=False,closedQ=False):
         inputCorrect=False
         while inputCorrect==False:
             choice = (input(f"{question} >"))
-            if choice.lower()=='yes' and len(choice)>1 or choice.lower()=='no' and len(choice)>1:
-                if choice.lower()=='yes':
-                    return True
-                elif choice.lower()=='no':
-                    return False
-                break
+            if closedQ==True:
+                if len(choice)<=3 and len(choice)>=1:
+                    if choice.lower()=='yes' or choice.lower()=='y':
+                        return True
+                    elif choice.lower()=='no' or choice.lower()=='n':
+                        return False
+                    else:
+                        print('invalid entry. Accepts Y/N or Yes/No')
             elif len(choice)>1 and isinstance(choice,str) and flag==False: #is string
                 break
             elif len(choice)==1 and isinstance(choice,str) and flag==False:
@@ -44,17 +46,25 @@ def gameStart():
                 elif choice.lower()=='block' or choice.lower()=='parry':
                     choice=7
                     break
+                elif choice.lower()=='potion' or choice.lower()=='potions' or choice.lower()=='heal':
+                    choice=10.5
+                    break
                 elif choice.lower()=='ultimate':
-                    choice=10
+                    choice=14
                     break
                 print('Not a choice')
             elif len(choice)==1 and isinstance(choice,str) and flag==True:
                 if choice =='1' or choice =='2':
-                    choice=int(choice)*3.5
+                    choice=float(choice)*3.5
                     break
-                elif choice=='3' and ultFlag==False:
+                elif choice=='3' and thisPlayer["Potions"]>=0:
+                    if thisPlayer["HP"]!=thisPlayer["Max HP"]:
+                        choice=float(choice)*3.5
+                        break
+                    print("HP Full, Potion not usable.")
+                elif choice=='4' and ultFlag==False:
                     print('Ultimate not Ready.')
-                elif choice=='3' and ultFlag==True:
+                elif choice=='4' and ultFlag==True:
                     choice=int(choice)*3.5
                     break
                 print('Not a choice')
@@ -73,6 +83,7 @@ def gameStart():
             "AtkTxt": "",
             "BlockTxt": "",
             "ParryTxt": "",
+            "Potions":3,
             "Ultimate": False,
             "Ult Points": 0
         }
@@ -143,7 +154,7 @@ def gameStart():
 
 
     def restAction():
-        rest=choiceFnc('Do you wish to take a short rest?')
+        rest=choiceFnc('Do you wish to take a short rest? [Y/N]\n')
         if rest==True:
             playerInfo('rest')
             return
@@ -154,15 +165,17 @@ def gameStart():
     def fight(monster):
         battleStatus = battle(thisPlayer,enemies[monster])
         if battleStatus==False:
-            return [False,choiceFnc('Do you wish to retry?')]
+            return [False,choiceFnc('Do you wish to retry? [Y/N]')]
         restAction()
-        return True
+        return [True]
 
     # def battle(player,enemy,egg):
     def battle(player,enemy,egg=False):
         def attack(attacker,defender,atkInput,defInput):
             tempHP=defender["HP"]
             tempAHP=attacker["HP"]
+            print(atkInput)
+            print('\n')
             if defInput<6.5 and atkInput<10.5: #Defender does not block.
                 defender["HP"] -= attacker["Atk"]
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} is hit.")
@@ -181,27 +194,36 @@ def gameStart():
                 print(f"{attacker['Name']}'s HP: {tempAHP}\t->\t{attacker['HP']}")
             elif atkInput>6.5 and attacker["Job"]!='Shield':  #both parties block. 
                 print(f"{attacker['Name']} and {enemy['Name']} both blocked.")
-
-            elif atkInput==10.5 and attacker['Ultimate']==True: #Ultimate battle
+            elif atkInput==10.5:
+                print(f'Used a potion.')
+                heal = attacker["HP"] + attacker["Max HP"] * (1/2)
+                if (attacker["HP"]+ heal) >attacker["Max HP"]:
+                    attacker["HP"]=attacker["Max HP"]
+                attacker["HP"]+= heal
+                attacker["Potion"]-=1
+                print(f" {tempAHP}\t->\t{attacker['HP']}")
+            elif atkInput==14 and attacker['Ultimate']==True: #Ultimate battle
                 print(f"ULTIMATEEEEEEEEEEE")
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} is hit.")
                 print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
-            elif atkInput==10.5 and attacker['Ultimate']==False:
+            elif atkInput==14 and attacker['Ultimate']==False:
                 print("Ultimate not ready yet,")
             
             
 
+        print('Get ready to survive.')
         while not (enemy["HP"]<0 or player["HP"]<0):
-            print(f"\n{enemy['Name']}\t\t{enemy['HP']} / {enemy['Max HP']}")
-            print(f"1. ATTACK\n2.BLOCK\n3.ULTIMATE\t\t({player['Ult Points']}/10)")
-            print(f"{player['Name']}\t\t{player['HP']} / {player['Max HP']}")
+            print(f"\n{enemy['Name']}\t\tHP:{int(enemy['HP'])} / {int(enemy['Max HP'])}")
+            print(f"1.ATTACK[{player['Atk']}]\n2.BLOCK[{int(player['Block'])}]\n3.POTIONS:({int(player['Potions'])})\n4.ULTIMATE({player['Ult Points']}/10)")
+            print(f"{player['Name']}\t\tHP:{int(player['HP'])} / {int(player['Max HP'])}")
 
             enemyChoice =   random.randint(1,10)
             if player["Job"]=="shield" and enemyChoice>6:
                 print(f"{enemy['Name']} is going to block.")
             elif player["Job"]=="shield" and enemyChoice <=6:
                 print(f"{enemy['Name']} is going to attack.")
-            attackerChoice=   choiceFnc('Command?',True)
+            attackerChoice=   choiceFnc('Command? [1 or Attack]',True)
+            print(attackerChoice,'Test')
             if attackerChoice<7:
                 attack(player,enemy,attackerChoice,enemyChoice)
                 player["Ult Points"]+=1
@@ -214,13 +236,13 @@ def gameStart():
             print('You have been defeated.')
             return False
         print(f"{enemy['Name']} has been defeated")
-        return [True]
+        return True
         
     
     def loopChoice(flagChoice,flagInitQ,flagRepeatQ):
-        pChoice = choiceFnc(flagInitQ)
-        while pChoice.lower()!=flagChoice.lower():
-            pChoice=choiceFnc(flagRepeatQ)
+        pChoice = choiceFnc(flagInitQ,False,False,True)
+        while pChoice!=True:
+            pChoice=choiceFnc(flagRepeatQ,False,False,True)
     
     def consoleColor(code):
         return f'\033[{code}m'
@@ -229,28 +251,34 @@ def gameStart():
     playerInfo('intro',choiceFnc('What is your name?\t'))
     print(f"Your name is \033[31;1;4m{playerInfo('player')['Name'].upper()}\033[0m")
 
-    # print("The table beckons you forth, drawing your attention to it.")
-    # loopChoice('yes','Do you go to the table?','You try to pull away from the table. Your hand now rests, pulling you to make a decision.')
+    print("The table beckons you forth, drawing your attention to it.")
+    loopChoice(True,'Do you go to the table?','You try to pull away from the table. Your hand now rests, pulling you to make a decision.')
 
-    # print('Before you lay four weapons, each of different schools.')
-    # print('First, a shield with a crest of the hare. Second, an axe.\nThird, a mysterious tome. Lastly, a pair of ominous daggers.')
-    print('Pick your weapon.    Pick your class.')
-    option = (choiceFnc('What do you choose? '))
+    print('Before you lay four weapons, each of different schools.')
+    print('First, a shield with a crest of the hare. Second, an axe.\nThird, a mysterious tome. Lastly, a pair of ominous daggers.')
+    print('Pick your weapon. Pick your class.')
+    option = (choiceFnc('What do you choose? [Shield, Axe, Book, Dagger]\n'))
 
     playerInfo('start',option)
     monsterSet(monsters)
     
 
-    print(thisPlayer)
-    print(enemies[monsters[0]]) #
-    # print(f"{thisPlayer['Name']} the {thisPlayer['Job']}")
-    # print('get ready to fight')
-    # battle(thisPlayer,enemies[monsters[0]]) # Skeleton fight
+    print(f"{thisPlayer['Name']} the {thisPlayer['Job']}")
     
     fSeg=fight(monsters[0])
     if fSeg[0]==False:
-        print(fSeg)
         return fSeg[1]
+    fSeg=fight(monsters[1])
+    if fSeg[0]==False:
+        return fSeg[1]
+    fSeg=fight(monsters[2])
+    if fSeg[0]==False:
+        return fSeg[1]
+    fSeg=fight(monsters[3])
+    if fSeg[0]==False:
+        return fSeg[1]
+    
+    print('You have defeated the creatures of the dungeon.\nIn the dark damp distance, a light shines through. Finally, freedom.')
 
 gameStatus=True
 while gameStatus==True:
