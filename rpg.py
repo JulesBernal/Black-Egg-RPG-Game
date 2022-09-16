@@ -47,8 +47,10 @@ def gameStart():
                     choice=7
                     break
                 elif choice.lower()=='potion' or choice.lower()=='potions' or choice.lower()=='heal':
-                    choice=10.5
-                    break
+                    if thisPlayer["HP"]!=thisPlayer["Max HP"]:
+                        choice=10.5
+                        break
+                    print("HP Full, Potion not usable.")
                 elif choice.lower()=='ultimate':
                     choice=14
                     break
@@ -154,7 +156,7 @@ def gameStart():
 
 
     def restAction():
-        rest=choiceFnc('Do you wish to take a short rest? [Y/N]\n')
+        rest=choiceFnc('Do you wish to take a short rest? [Y/N]\n',False,False,True)
         if rest==True:
             playerInfo('rest')
             return
@@ -165,22 +167,21 @@ def gameStart():
     def fight(monster):
         battleStatus = battle(thisPlayer,enemies[monster])
         if battleStatus==False:
-            return [False,choiceFnc('Do you wish to retry? [Y/N]')]
+            return [False,choiceFnc('Do you wish to retry? [Y/N]',False,False,True)]
         restAction()
         return [True]
 
-    # def battle(player,enemy,egg):
+
     def battle(player,enemy,egg=False):
         def attack(attacker,defender,atkInput,defInput):
             tempHP=defender["HP"]
             tempAHP=attacker["HP"]
-            print(atkInput)
             print('\n')
             if defInput<6.5 and atkInput<10.5: #Defender does not block.
                 defender["HP"] -= attacker["Atk"]
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} is hit.")
                 print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
-            elif defInput>=6.5 and atkInput<10.5 and defender["Job"]!="Shield": # Defender blocks
+            elif defInput<=10 and defInput>=6.5 and atkInput<10.5 and defender["Job"]!="Shield": # Defender blocks
                 if (attacker["Atk"] - defender["Block"])<=0:
                     defender["HP"]-=0
                 elif (attacker["Atk"] - defender["Block"])>0:
@@ -188,19 +189,20 @@ def gameStart():
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} {defender['BlockTxt']}.")
                 print(f"{defender['Name']}'s HP: {tempHP}\t->\t{defender['HP']}")
             
-            elif defInput>=6.5 and atkInput<10.5 and defender["Job"]=="Shield": #shield parries
+            elif defInput<=10 and defInput>=6.5 and atkInput<10.5 and defender["Job"]=="Shield": #shield parries
                 attacker["HP"]-=abs(attacker["Atk"] - defender["Block"])
                 print(f"{attacker['Name']} {attacker['AtkTxt']}.\n{defender['Name']} {defender['ParryTxt']}.")
                 print(f"{attacker['Name']}'s HP: {tempAHP}\t->\t{attacker['HP']}")
-            elif atkInput>6.5 and attacker["Job"]!='Shield':  #both parties block. 
+            elif atkInput==7.0 and attacker["Job"]!='Shield':  #both parties block. 
                 print(f"{attacker['Name']} and {enemy['Name']} both blocked.")
-            elif atkInput==10.5:
+            elif atkInput==10.5: #Potion
                 print(f'Used a potion.')
                 heal = attacker["HP"] + attacker["Max HP"] * (1/2)
-                if (attacker["HP"]+ heal) >attacker["Max HP"]:
+                if (attacker["HP"]+ heal) >=attacker["Max HP"]:
                     attacker["HP"]=attacker["Max HP"]
+                    return print(f" {tempAHP}\t->\t{attacker['HP']}")
                 attacker["HP"]+= heal
-                attacker["Potion"]-=1
+                attacker["Potions"]-=1
                 print(f" {tempAHP}\t->\t{attacker['HP']}")
             elif atkInput==14 and attacker['Ultimate']==True: #Ultimate battle
                 print(f"ULTIMATEEEEEEEEEEE")
@@ -223,8 +225,7 @@ def gameStart():
             elif player["Job"]=="shield" and enemyChoice <=6:
                 print(f"{enemy['Name']} is going to attack.")
             attackerChoice=   choiceFnc('Command? [1 or Attack]',True)
-            print(attackerChoice,'Test')
-            if attackerChoice<7:
+            if attackerChoice!=7.0 and player["Job"]!='shield':
                 attack(player,enemy,attackerChoice,enemyChoice)
                 player["Ult Points"]+=1
             if enemyChoice<=6.5 and enemy["HP"]>0:
