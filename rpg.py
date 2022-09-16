@@ -259,9 +259,9 @@ def gameStart():
         uVal=0
         while not (enemy["HP"]<0 or player["HP"]<0):
             ##HUD
-            print(f"\n{enemy['Name']}\t\tHP:{cColor('red')}[{hpBar(enemy)}] {int(enemy['HP'])} / {int(enemy['Max HP'])}{cColor('rr')}")
+            print(f"\n{enemy['Name']}\t\tHP:{cColor('red')}{int(enemy['HP'])} / {int(enemy['Max HP'])} [{hpBar(enemy)}]{cColor('rr')}")
             print(f"1.ATTACK[{int(player['Atk'])}]\n2.BLOCK[{int(player['Block'])}]\n3.POTIONS:({int(player['Potions'])})\n4.ULTIMATE({player['Ult Points']}/10){cColor('rr')}")
-            print(f"{player['Name']}\t\tHP:{cColor('red')}[{hpBar(player)}] {int(player['HP'])} / {int(player['Max HP'])}{cColor('rr')}")
+            print(f"{player['Name']}\t\tHP:{cColor('red')}{int(player['HP'])} / {int(player['Max HP'])} [{hpBar(player)}]{cColor('rr')}")
 
             enemyChoice =   random.randint(1,10)
             if player["Job"]=="shield" and enemyChoice>6:
@@ -270,7 +270,6 @@ def gameStart():
                 print(f"{enemy['Name']} is going to attack.")
             attackerChoice=   choiceFnc('Command? [1 or Attack]',True)
             
-            # print(attackerChoice)
             if attackerChoice!=7.0:
                 attack(player,enemy,attackerChoice,enemyChoice)
                 ultCounter(player,uVal)
@@ -300,10 +299,42 @@ def gameStart():
         elif code=='!':
             code='1;32'
         return f'\033[{code}m'
-
+    print('\t\t\t   Black Egg\n')
+    print('    ...     ..            ..                             ..               ..      .                             ')
+    print('.=*8888x <"?88h.   x .d88"                        < .z@8"`            x88f` `..x88. .>                         ')
+    print('X>  \'8888H> \'8888    5888R                          !@88E            :8888   xf`*8888%                          ')
+    print('\'88h. `8888   8888    \'888R         u           .    \'888E   u       :8888f .888  `"`         uL          uL     ')
+    print('\'8888 \'8888    "88>    888R      us888u.   .udR88N    888E u@8NL     88888\' X8888. >"8x   .ue888Nc..  .ue888Nc.. ')
+    print('`888 \'8888.xH888x.    888R   .@88 "8888" <888\'888k   888E`"88*"     88888  ?88888< 888> d88E`"888E` d88E`"888E` ')
+    print('X" :88*~  `*8888>   888R   9888  9888  9888 \'Y"    888E .dN.      88888   "88888 "8%  888E  888E  888E  888E  ')
+    print('~"   !"`      "888>   888R   9888  9888  9888        888E~8888      88888 \'  `8888>     888E  888E  888E  888E  ')
+    print('.H8888h.      ?88    888R   9888  9888  9888        888E \'888&     `8888> %  X88!      888E  888E  888E  888E  ')
+    print(':"^"88888h.    \'!    .888B . 9888  9888  ?8888u../   888E  9888.     `888X  `~""`   :   888& .888E  888& .888E  ')
+    print('^    "88888hx.+"     ^*888%  "888*""888"  "8888P\'  \'"888*" 4888"       "88k.      .~    *888" 888&  *888" 888&  ')
+    print('        ^"**""          "%     ^Y"   ^Y\'     "P\'       ""    ""           `""*==~~`       `"   "888E  `"   "888E ')
+    print('                                                                                     .dWi   `88E .dWi   `88E ')
+    print('                                                                                     4888~  J8%  4888~  J8%  ')
+    print('                                                                                      ^"===*"`    ^"===*"      \n')                              
+                                                                          
+                                                                          
+    print('                           ████████')                                 
+    print('                          ██        ██')                                
+    print('                        ██▒▒▒▒        ██')                              
+    print('                      ██▒▒▒▒▒▒      ▒▒▒▒██')                            
+    print('                      ██▒▒▒▒▒▒      ▒▒▒▒██')                            
+    print('                    ██  ▒▒▒▒        ▒▒▒▒▒▒██')                          
+    print('                    ██                ▒▒▒▒██ ')                         
+    print('                  ██▒▒      ▒▒▒▒▒▒          ██')                        
+    print('                  ██      ▒▒▒▒▒▒▒▒▒▒        ██')                        
+    print('                  ██      ▒▒▒▒▒▒▒▒▒▒    ▒▒▒▒██')                        
+    print('                  ██▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒██')                        
+    print('                    ██▒▒▒▒  ▒▒▒▒▒▒    ▒▒▒▒██')                          
+    print('                    ██▒▒▒▒            ▒▒▒▒██')                          
+    print('                      ██▒▒              ██')                            
+    print('                        ████        ████')                              
+    print('                            ████████\n')                            
     print('You wake up with a headache in a dimly lit room.')
     playerInfo('intro',choiceFnc('What is your name? '))
-    # print(f"Your name is \033[31;1;4m{playerInfo('player')['Name'].upper()}\033[0m")
     print(f"Your name is {cColor('red')}{playerInfo('player')['Name'].upper()}{cColor('rr')}")
 
     print("The table beckons you forth, drawing your attention to it.")
@@ -315,7 +346,7 @@ def gameStart():
     option = (choiceFnc('What do you choose? [Shield, Axe, Book, Dagger]\n'))
 
     playerInfo('start',option)
-    print(f"{thisPlayer['Name']} the {thisPlayer['Job']}\n\n\n\n")
+    print(f"{thisPlayer['Name']} the {thisPlayer['Job']} bearer\n\n\n\n")
     monsterSet(monsters)
     fSeg=fight(monsters[0])
     if fSeg[0]==False:
